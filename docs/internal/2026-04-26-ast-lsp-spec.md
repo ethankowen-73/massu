@@ -15,7 +15,8 @@
 | LSP client base | `vscode-languageserver-protocol@^3.17.5` | Reference TypeScript types + JSON-RPC layer for the LSP spec; battle-tested |
 | WASM grammar packaging | **Strategy A** (download-on-first-use, SHA-256 verified, cached at `~/.massu/wasm-cache/`) | Strategy B (peer-dep packages) breaks zero-touch install |
 | Native grammar bundling | **REJECTED** | Native deps break npm portability across platforms |
-| `tree-sitter-wasms` umbrella package | **BANNED** | Plan line 122 explicit ban — Strategy A precludes it |
+| `tree-sitter-wasms` as **npm dependency** | **BANNED** | Plan line 122 explicit ban — would bundle 30-50MB into the npm tarball |
+| `tree-sitter-wasms` as **unpkg source** for Strategy A downloads | **REQUIRED** | The individual `tree-sitter-<lang>` npm packages do NOT ship `.wasm` files (verified at Phase 9 release-prep via `unpkg.com/<pkg>?meta` — they ship C source + native `.node` prebuilds only). Pre-built WASM grammars live exclusively in the `tree-sitter-wasms` package. Strategy A fetches individual `.wasm` files from `unpkg.com/tree-sitter-wasms@<pinned>/out/tree-sitter-<lang>.wasm` at first use; the package is never added to `dependencies` |
 
 ### Strategy A vs Strategy B (rationale)
 

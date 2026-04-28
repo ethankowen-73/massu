@@ -158,31 +158,41 @@ fixed inline; 3 LOW findings fixed inline; 4 INFO findings documented.
   best-effort kills the child. No leak observed in test harness.
 - **Documented**: Existing implementation suffices.
 
-### F-007 [HIGH-documented-INFO] WASM manifest contains placeholder SHA-256 values
+### F-007 [CLOSED 2026-04-28] WASM manifest contains placeholder SHA-256 values
 
 - **Surface**: WASM load
-- **Vector**: `tree-sitter-loader.ts` ships with `sha256:
-  "PLACEHOLDER_PYTHON_SHA256_FILL_AT_RELEASE"` etc. for all 4
-  languages. Until Phase 9 release-prep populates real hashes, every
-  download path will fail with `GrammarSHAMismatchError` (because no
-  real WASM produces the literal placeholder hash).
+- **Original vector** (audit-time, 2026-04-28 morning): `tree-sitter-loader.ts`
+  shipped with `sha256: "PLACEHOLDER_PYTHON_SHA256_FILL_AT_RELEASE"` etc.
+  for all 4 languages. Until real hashes were populated, every download
+  path failed with `GrammarSHAMismatchError`.
 - **Severity escalation considered**: This was originally HIGH but
   classified as **acceptable-with-doc-note** because:
-  1. It is FAIL-SAFE: the placeholder causes refusal, not silent
-     acceptance. A hostile WASM whose hash doesn't equal
-     `"PLACEHOLDER_..."` is rejected.
-  2. It is documented in the plan (Phase 9, line 197 — `npm pack
-     --dry-run` step) and in the loader's docstring (lines 19-22 of
-     `tree-sitter-loader.ts`).
-  3. Production WASM loading is intentionally deferred to Phase 9 with
-     explicit hash review (`curl <url> | shasum -a 256`).
-  4. Until then, AST adapters silently degrade to regex fallback (per
-     `regex-fallback.ts`) — this is the documented v1 behaviour.
-- **Mitigation present**: Fail-safe by construction. No unsafe code
-  path exists.
-- **Fix applied**: None needed — planned Phase 9 task.
-- **Verification**: `manifest hashes are PLACEHOLDER values` test in
-  `wasm-grammar-load.test.ts`.
+  1. It was FAIL-SAFE: the placeholder caused refusal, not silent
+     acceptance. A hostile WASM whose hash didn't equal
+     `"PLACEHOLDER_..."` was rejected.
+  2. AST adapters silently degraded to regex fallback (per
+     `regex-fallback.ts`) — documented v1 behaviour.
+- **Status update (2026-04-28 evening — Phase 9 release-prep)**: real
+  SHA-256 hashes populated for all 4 first-party languages. Pinned URL
+  scheme corrected from the audit-time assumption (`tree-sitter-<lang>`
+  per-language packages, which do NOT ship `.wasm`) to the actual
+  source: `tree-sitter-wasms@0.1.13/out/tree-sitter-<lang>.wasm` on
+  unpkg. Hashes computed via `curl -fsSL <url> | shasum -a 256`:
+    - python:     `9056d0fb0c337810d019fae350e8167786119da98f0f282aceae7ab89ee8253b`
+    - typescript: `8515404dceed38e1ed86aa34b09fcf3379fff1b4ff9dd3967bcd6d1eb5ac3d8f`
+    - javascript: `63812b9e275d26851264734868d27a1656bd44a2ef6eb3e85e6b03728c595ab5`
+    - swift:      `41c4fdb2249a3aa6d87eed0d383081ff09725c2248b4977043a43825980ffcc7`
+- **Mitigation present**: Real hashes pinned + SHA-256 verification on
+  every download AND on every cache-hit load (per loader code). Fail-
+  safe construction is unchanged; the manifest is now also functional.
+- **Fix applied**: Updated `GRAMMAR_MANIFEST` in `tree-sitter-loader.ts`
+  with corrected URLs and real hashes. Updated spec doc to clarify the
+  `tree-sitter-wasms` vs `tree-sitter-<lang>` distinction. Updated
+  license enumeration doc with the Unlicense-bundling note.
+- **Verification**: `manifest hashes are populated 64-char hex` test
+  in `wasm-grammar-load.test.ts` (replaces the audit-time test that
+  asserted the inverse). Test rejects: PLACEHOLDER_ prefix, non-hex,
+  SHA-256-of-empty-string (`e3b0c4...`).
 
 ### F-008 [HIGH] Symlink attack on cache directory
 

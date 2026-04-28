@@ -9,9 +9,11 @@
 
 ## Verification methodology
 
-License values verified via `gh api repos/<owner>/<repo>/license --jq '.license.spdx_id'` against the latest default branch on 2026-04-27. Pinned versions are recorded for the WASM manifest in `tree-sitter-loader.ts`. SHA-256 hashes are filled in during Phase 1 when the actual WASM artifacts are pinned.
+License values verified via `gh api repos/<owner>/<repo>/license --jq '.license.spdx_id'` against the latest default branch on 2026-04-27. Pinned versions are recorded for the WASM manifest in `tree-sitter-loader.ts`.
 
-The Strategy A WASM packaging decision (Phase 0 spec doc, section 8) means **massu does not redistribute these grammars**. They are downloaded by the user's machine on first use from the upstream source. This further reduces redistribution-clause exposure — even copyleft virality concerns are limited to runtime linkage, which the SPDX-permissive set handled here doesn't trigger anyway.
+**WASM artifact source (Phase 9 update, 2026-04-28)**: the per-grammar `tree-sitter-<lang>` npm packages do NOT ship pre-built `.wasm` files (verified at Phase 9 release-prep via `unpkg.com/<pkg>?meta`). Pre-built WASM binaries live in a separate npm package, [`tree-sitter-wasms`](https://github.com/Gregoor/tree-sitter-wasms), published under the **Unlicense** (public-domain dedication). massu's Strategy A loader pins `tree-sitter-wasms@0.1.13` and fetches individual `.wasm` files from `unpkg.com/tree-sitter-wasms@0.1.13/out/tree-sitter-<lang>.wasm` at first use, then verifies each against the SHA-256 hash hardcoded in `tree-sitter-loader.ts`. The underlying grammar's license (MIT for python/typescript/javascript/swift) applies to the WASM binary as a derivative work; the Unlicense bundling layer adds no further constraint.
+
+The Strategy A WASM packaging decision (Phase 0 spec doc, section 8) means **massu does not redistribute these grammars**. They are downloaded by the user's machine on first use from unpkg's CDN. This further reduces redistribution-clause exposure — even copyleft virality concerns are limited to runtime linkage, which the SPDX-permissive set handled here doesn't trigger anyway.
 
 ---
 
